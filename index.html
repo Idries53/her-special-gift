@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Legendary Collection</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Lilita+One&family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- 3D Model Viewer -->
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.0.1/model-viewer.min.js"></script>
+
+    <style>
+        /* --- The Perfect Blush & Night Sky Palette --- */
+        :root {
+            --primary-blush: #f8d3e3;
+            --secondary-cream: #fdf6e4;
+            --accent-rose-gold: #d4a5a5;
+            --accent-soft-gold: #e0c9a6;
+            --bg-night-sky: #0c0b1e;
+            --bg-deep-purple: #1e1a3d;
+            --text-dark: #4a3c4a;
+            --text-light: #fdf6e4;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(to bottom, var(--bg-night-sky), var(--bg-deep-purple));
+            color: var(--text-light);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            perspective: 2000px;
+            user-select: none;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: radial-gradient(2px 2px at 20px 30px, #eee, transparent), radial-gradient(2px 2px at 40px 70px, #ddd, transparent), radial-gradient(1px 1px at 50px 50px, #fff, transparent), radial-gradient(1px 1px at 80px 10px, #fff, transparent), radial-gradient(2px 2px at 130px 80px, #eee, transparent), radial-gradient(1px 1px at 110px 120px, #ddd, transparent);
+            background-repeat: repeat;
+            background-size: 250px 250px;
+            opacity: 0.5;
+            animation: twinkle 8s infinite;
+        }
+        @keyframes twinkle { 0%, 100% { opacity: 0.5; } 50% { opacity: 0.8; } }
+
+        /* --- The 3D Scene --- */
+        .scene {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* --- The 3D Pack (Now a real model!) --- */
+        #pack-model-viewer {
+            width: 300px;
+            height: 400px;
+            cursor: pointer;
+            z-index: 10;
+            --progress-bar-color: transparent;
+            --auto-rotate-delay: 999999s;
+        }
+        #pack-model-viewer.opening {
+            animation: fadeOutScale 1.2s forwards;
+        }
+        @keyframes fadeOutScale {
+            to { opacity: 0; transform: scale(0.8); }
+        }
+
+        /* --- The 3D Cards --- */
+        .pokemon-card {
+            width: 250px;
+            height: 350px;
+            position: absolute;
+            opacity: 0;
+            transform: scale(0.5) rotateY(180deg) translateZ(-500px);
+            transition: all 1.5s cubic-bezier(0.23, 1, 0.32, 1);
+            cursor: pointer;
+        }
+        .pokemon-card.revealed {
+            opacity: 1;
+            transform: scale(1) rotateY(0deg) translateZ(0);
+        }
+        .pokemon-card model-viewer {
+            width: 100%;
+            height: 100%;
+            --progress-bar-color: transparent;
+            --auto-rotate-delay: 999999s;
+        }
+        .pokemon-card:hover model-viewer {
+            --auto-rotate-delay: 0s;
+            auto-rotate: true;
+        }
+
+        /* --- Light Burst & Fireworks --- */
+        .light-burst { position: fixed; top: 50%; left: 50%; width: 150%; height: 150%; background: radial-gradient(circle, rgba(248,211,227,0.9) 0%, rgba(253,246,228,0) 70%); transform: translate(-50%, -50%) scale(0); opacity: 0; pointer-events: none; z-index: 100; }
+        .light-burst.flash { animation: flash 0.7s ease-out; }
+        @keyframes flash { 0% { transform: translate(-50%, -50%) scale(0); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(2); opacity: 0; } }
+        #particle-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+        .firework-particle { position: absolute; width: 8px; height: 8px; border-radius: 50%; animation: explode 1.8s ease-out forwards; }
+        @keyframes explode { 0% { transform: translate(0, 0); opacity: 1; } 100% { transform: translate(var(--tx), var(--ty)); opacity: 0; } }
+        
+        /* --- Final 3D Model Viewer Scene --- */
+        .final-model-container {
+            display: none;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 50;
+        }
+        .final-model-container model-viewer {
+            width: 60%;
+            height: 70%;
+            --progress-bar-color: transparent;
+        }
+        .final-model-container h1 {
+            font-family: 'Great Vibes', cursive;
+            font-size: 4em;
+            color: var(--accent-soft-gold);
+            text-shadow: 3px 3px 6px black;
+            margin-top: 20px;
+            animation: fadeInScale 2s ease-out;
+        }
+        @keyframes fadeInScale { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
+
+        /* --- Instruction Text --- */
+        .instruction {
+            position: absolute;
+            bottom: 50px;
+            font-family: 'Lilita One', cursive;
+            font-size: 1.5em;
+            color: var(--primary-blush);
+            text-shadow: 2px 2px 5px black;
+            animation: pulse 2s infinite;
+            display: none;
+        }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+
+    </style>
+</head>
+<body>
+
+    <main class="scene" id="scene">
+        <!-- ✨ YOUR 3D PACK MODEL ✨ -->
+        <model-viewer id="pack-model-viewer" 
+                      src="assets/models/pack.glb" 
+                      alt="A 3D gift pack"
+                      camera-controls
+                      auto-rotate
+                      interaction-prompt="none">
+        </model-viewer>
+        
+        <p class="instruction" id="instruction">Tap to reveal the next card!</p>
+    </main>
+
+    <!-- ✨ YOUR FINAL 3D BOUQUET MODEL ✨ -->
+    <div class="final-model-container" id="final-model-container">
+        <model-viewer src="assets/models/final_bouquet.glb" 
+                      alt="A 3D flower bouquet"
+                      camera-controls
+                      auto-rotate
+                      shadow-intensity="1">
+        </model-viewer>
+        <h1>For My Everything</h1>
+    </div>
+
+    <!-- Effects Containers -->
+    <div class="light-burst" id="light-burst"></div>
+    <div id="particle-container"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // --- ✨ STEP 1: CUSTOMIZE YOUR CARDS HERE ✨ ---
+            // Now, you point to your 3D card models!
+            const cardData = [
+                { cardModel: 'assets/models/card_01.glb', name: 'Her Name', title: 'The Smile That Throws Parties', hp: '∞' },
+                { cardModel: 'assets/models/card_02.glb', name: 'Her Name', title: 'The Look That Stops Time', hp: '∞' },
+                { cardModel: 'assets/models/card_03.glb', name: 'Her Name', title: 'The Laughter That\'s Contagious', hp: '∞' },
+                { cardModel: 'assets/models/card_04.glb', name: 'Her Name', title: 'The Voice That Is Melody', hp: '∞' }
+                // Add as many as you want!
+            ];
+
+            const scene = document.getElementById('scene');
+            const packModelViewer = document.getElementById('pack-model-viewer');
+            const instruction = document.getElementById('instruction');
+            const finalModelContainer = document.getElementById('final-model-container');
+            const lightBurst = document.getElementById('light-burst');
+            const particleContainer = document.getElementById('particle-container');
+
+            let isPackOpen = false;
+            let currentCardIndex = 0;
+
+            document.body.addEventListener('click', (event) => {
+                if (!isPackOpen) {
+                    openPack();
+                    return;
+                }
+                if (currentCardIndex < cardData.length) {
+                    if (event.target.closest('.pokemon-card')) return;
+                    revealNextCard();
+                }
+            });
+
+            function openPack() {
+                isPackOpen = true;
+                packModelViewer.classList.add('opening');
+                instruction.style.display = 'block';
+                setTimeout(() => { revealNextCard(); }, 1200);
+            }
+
+            function revealNextCard() {
+                if (currentCardIndex >= cardData.length) {
+                    showFinalModel();
+                    instruction.style.display = 'none';
+                    return;
+                }
+                const data = cardData[currentCardIndex];
+                const card = createCardElement(data);
+                
+                card.style.left = '50%';
+                card.style.top = '50%';
+                card.style.transform = 'translate(-50%, -50%) scale(0.5) rotateY(180deg) translateZ(-500px)';
+                card.style.zIndex = 20 + currentCardIndex;
+                
+                scene.appendChild(card);
+
+                const cols = 2;
+                const cardWidth = 250;
+                const cardHeight = 350;
+                const gap = 20;
+                const row = Math.floor(currentCardIndex / cols);
+                const col = currentCardIndex % cols;
+                
+                const totalWidth = cols * cardWidth + (cols - 1) * gap;
+                const startX = (window.innerWidth - totalWidth) / 2;
+                const startY = (window.innerHeight - (Math.ceil(cardData.length / cols) * cardHeight + (Math.ceil(cardData.length / cols) - 1) * gap)) / 2;
+
+                const finalX = startX + col * (cardWidth + gap) + cardWidth / 2;
+                const finalY = startY + row * (cardHeight + gap) + cardHeight / 2;
+
+                requestAnimationFrame(() => {
+                    card.style.left = `${finalX}px`;
+                    card.style.top = `${finalY}px`;
+                    card.style.transform = 'translate(-50%, -50%) scale(1) rotateY(0deg) translateZ(0)';
+                    card.classList.add('revealed');
+                    lightBurst.classList.add('flash');
+                    createFirework();
+                });
+
+                setTimeout(() => { lightBurst.classList.remove('flash'); }, 700);
+                currentCardIndex++;
+            }
+            
+            function createCardElement(data) {
+                const card = document.createElement('div');
+                card.className = 'pokemon-card';
+                card.innerHTML = `
+                    <model-viewer src="${data.cardModel}" 
+                                  alt="${data.name}" 
+                                  shadow-intensity="1" 
+                                  camera-controls 
+                                  disable-pan 
+                                  disable-zoom>
+                    </model-viewer>
+                `;
+                return card;
+            }
+
+            function createFirework() {
+                const colors = ['#f8d3e3', '#fdf6e4', '#d4a5a5', '#e0c9a6', '#ffffff'];
+                const x = Math.random() * window.innerWidth;
+                const y = Math.random() * window.innerHeight;
+                const particleCount = 50;
+                for (let i = 0; i < particleCount; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'firework-particle';
+                    particle.style.left = `${x}px`;
+                    particle.style.top = `${y}px`;
+                    particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+                    const angle = (Math.PI * 2 * i) / particleCount;
+                    const velocity = 50 + Math.random() * 150;
+                    const tx = Math.cos(angle) * velocity;
+                    const ty = Math.sin(angle) * velocity;
+                    particle.style.setProperty('--tx', `${tx}px`);
+                    particle.style.setProperty('--ty', `${ty}px`);
+                    particleContainer.appendChild(particle);
+                    setTimeout(() => particle.remove(), 1800);
+                }
+            }
+
+            function showFinalModel() {
+                for(let i = 0; i < 8; i++) {
+                    setTimeout(() => createFirework(), i * 300);
+                }
+                
+                setTimeout(() => {
+                    scene.style.display = 'none';
+                    finalModelContainer.style.display = 'flex';
+                }, 2500);
+            }
+        });
+    </script>
+</body>
+</html>
